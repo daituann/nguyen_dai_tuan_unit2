@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Countryside Farm Game</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; background-color: #eef9bf; margin: 0; padding: 20px; }
+        h1 { color: #2e7d32; }
+        .game-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; max-width: 600px; margin: auto; }
+        .card { width: 160px; padding: 15px; background: #ffffff; border: 2px solid #81c784; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .target-zone { width: 100%; height: 50px; border: 2px dashed #4caf50; border-radius: 5px; margin-top: 10px; display: flex; align-items: center; justify-content: center; background: #f1f8e9; font-weight: bold; }
+        .word-bank { margin-top: 30px; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+        .draggable-word { padding: 10px 15px; background: #ffb74d; color: #fff; font-weight: bold; border-radius: 5px; cursor: grab; user-select: none; }
+        .correct { background: #81c784 !important; color: white; border: none; }
+    </style>
+</head>
+<body>
+
+    <h1>🚜 Countryside Farm Game</h1>
+    <p>Kéo thẻ từ vựng thả vào đúng hoạt động nông nghiệp tương ứng:</p>
+
+    <div class="game-container" id="cards-container"></div>
+
+    <h3>Thẻ Từ Vựng:</h3>
+    <div class="word-bank" id="word-bank"></div>
+
+    <script>
+        const gameData = [
+            { id: 1, action: "Cày ruộng", word: "ploughing fields" },
+            { id: 2, action: "Bắt cá", word: "catching fish" },
+            { id: 3, action: "Phơi lúa", word: "drying rice" },
+            { id: 4, action: "Bốc dỡ lúa", word: "unloading rice" },
+            { id: 5, action: "Cho lợn ăn", word: "feeding pigs" },
+            { id: 6, action: "Vắt sữa bò", word: "milking cows" }
+        ];
+
+        const cardsContainer = document.getElementById('cards-container');
+        const wordBank = document.getElementById('word-bank');
+
+        // Tạo danh sách thẻ công việc
+        gameData.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+                <h4>${item.action}</h4>
+                <div class="target-zone" data-correct="${item.word}" ondragover="allowDrop(event)" ondrop="drop(event)">
+                    Thả từ vào đây
+                </div>
+            `;
+            cardsContainer.appendChild(card);
+        });
+
+        // Tạo danh sách từ xáo trộn
+        const shuffledWords = [...gameData].map(d => d.word).sort(() => Math.random() - 0.5);
+        shuffledWords.forEach(word => {
+            const wordEl = document.createElement('div');
+            wordEl.className = 'draggable-word';
+            wordEl.innerText = word;
+            wordEl.id = 'word-' + word.replace(/\s+/g, '-');
+            wordEl.draggable = true;
+            wordEl.ondragstart = (e) => e.dataTransfer.setData("text", e.target.id);
+            wordBank.appendChild(wordEl);
+        });
+
+        function allowDrop(ev) { ev.preventDefault(); }
+
+        function drop(ev) {
+            ev.preventDefault();
+            const data = ev.dataTransfer.getData("text");
+            const draggedElement = document.getElementById(data);
+            const targetZone = ev.target;
+
+            if (targetZone.dataset.correct === draggedElement.innerText) {
+                targetZone.innerText = draggedElement.innerText;
+                targetZone.classList.add('correct');
+                draggedElement.style.display = 'none';
+                
+                // Phát âm từ vựng (Sử dụng SpeechSynthesis API của trình duyệt)
+                const utterance = new SpeechSynthesisUtterance(draggedElement.innerText);
+                utterance.lang = 'en-US';
+                window.speechSynthesis.speak(utterance);
+            } else {
+                alert("Thử lại nhé!");
+            }
+        }
+    </script>
+</body>
+</html>
